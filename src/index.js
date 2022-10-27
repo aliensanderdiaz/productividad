@@ -5,7 +5,10 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const app = express()
 const port = process.env.PORT || 3000
+const serverless = require("serverless-http");
 
+
+const router = express.Router();
 app.use(express.json())
 app.use(cors())
 
@@ -17,18 +20,20 @@ const tareaSchema = new mongoose.Schema({
 
 const Tarea = mongoose.model('Tarea', tareaSchema);
 
-app.post('/', async (req, res) => {
+router.post('/', async (req, res) => {
     let tarea = new Tarea(req.body)
     await tarea.save()
     res.send({ tarea })
 })
 
-app.get('/dia/:dia', async (req, res) => {
+router.get('/dia/:dia', async (req, res) => {
     let dia = req.params.dia
     console.log({ dia })
     let tareas = await Tarea.find({ dia: +dia })
     res.send({ tareas })
 })
+
+app.use(`/.netlify/functions/api`, router);
 
 main().catch(err => console.log(err));
 
@@ -39,3 +44,6 @@ async function main() {
         console.log(`Example app listening on port ${port}`)
     })
 }
+
+module.exports = app;
+module.exports.handler = serverless(app);
